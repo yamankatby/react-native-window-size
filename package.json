@@ -1,6 +1,6 @@
 {
   "name": "react-native-window-size",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Simple React Native library helps you to design for different screen sizes.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
