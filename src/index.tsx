@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 export type WindowSizeClass = string | number;
@@ -99,9 +99,7 @@ export const useIsWindowSizeClassNot = (sx: WindowSizeClass) => {
   }, [windowSizeClass, sx]);
 };
 
-export const useWindowSizeClassValue = <T,>(
-  query: Partial<Record<WindowSizeClass, T>>
-) => {
+export const useWindowSize = () => {
   const windowSizes = useWindowSizes();
   const keys = useMemo(
     () => Object.keys(windowSizes) as WindowSizeClass[],
@@ -110,13 +108,23 @@ export const useWindowSizeClassValue = <T,>(
 
   const windowSizeClass = useWindowSizeClass();
 
-  return useMemo(() => {
-    const queryKeys = Object.keys(query) as WindowSizeClass[];
+  return useCallback(
+    <T,>(query: Partial<Record<WindowSizeClass, T>>) => {
+      const queryKeys = Object.keys(query) as WindowSizeClass[];
 
-    let nearest = windowSizeClass;
-    while (!queryKeys.includes(nearest)) {
-      nearest = keys[keys.indexOf(nearest) - 1];
-    }
-    return query[nearest];
-  }, [query, keys, windowSizeClass]);
+      let nearest = windowSizeClass;
+      while (!queryKeys.includes(nearest)) {
+        nearest = keys[keys.indexOf(nearest) - 1];
+      }
+      return query[nearest];
+    },
+    [keys, windowSizeClass]
+  );
+};
+
+export const useWindowSizeClassValue = <T,>(
+  query: Partial<Record<WindowSizeClass, T>>
+) => {
+  const windowSize = useWindowSize();
+  return useMemo(() => windowSize(query), [windowSize, query]);
 };
