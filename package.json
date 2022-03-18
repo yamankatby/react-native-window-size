@@ -1,7 +1,7 @@
 {
   "name": "react-native-window-size",
-  "version": "0.0.0",
-  "description": "asdf",
+  "version": "0.1.0",
+  "description": "Simple React Native library helps you to design for different screen sizes.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -37,7 +37,7 @@
     "android"
   ],
   "repository": "https://github.com/yamankatby/react-native-window-size",
-  "author": "Yaman KATBY <m.yaman.katby@gmail.com> (https://github.com/yamankatby)",
+  "author": "Yaman KATBY <me@yamankatby.com> (https://yamankatby.com)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/yamankatby/react-native-window-size/issues"
