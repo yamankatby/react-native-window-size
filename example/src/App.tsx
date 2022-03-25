@@ -11,7 +11,7 @@ const App = () => {
         backgroundColor: windowSize.value({ mobile: 'red', tablet: 'green' }),
       }}
     >
-      Hello, world!
+      {windowSize.down('mobile') && 'true'}
     </Text>
   );
 };
