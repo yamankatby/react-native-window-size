@@ -7,8 +7,8 @@ const App = () => {
   return (
     <Text
       style={{
-        marginTop: windowSize({ mobile: 20, desktop: 50 }),
-        backgroundColor: windowSize({ mobile: 'red', tablet: 'green' }),
+        marginTop: windowSize.value({ mobile: 20, desktop: 50 }),
+        backgroundColor: windowSize.value({ mobile: 'red', tablet: 'green' }),
       }}
     >
       Hello, world!
@@ -18,7 +18,7 @@ const App = () => {
 
 export default function AppProvider() {
   return (
-    <Provider windowSizes={{ mobile: 0, tablet: 720, desktop: 1200 }}>
+    <Provider breakpoints={{ mobile: 0, tablet: 720, desktop: 1200 }}>
       <App />
     </Provider>
   );

@@ -1,41 +1,41 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
-export type WindowSizeClass = string | number;
+export type Breakpoint = string | number | symbol;
 
-export type WindowSizes = { [key in WindowSizeClass]: number };
+export type Breakpoints = { [key in Breakpoint]: number };
 
-export const WindowSizeClassContext = createContext<WindowSizeClass>('');
+export const ActiveBreakpointContext = createContext<Breakpoint | null>(null);
 
-export const WindowSizesContext = createContext<WindowSizes>({});
+export const BreakpointsContext = createContext<Breakpoints | null>(null);
 
-export const useWindowSizeClass = () => useContext(WindowSizeClassContext);
+export const useActiveBreakpoint = () => useContext(ActiveBreakpointContext);
 
-export const useWindowSizes = () => useContext(WindowSizesContext);
+export const useBreakpoints = () => useContext(BreakpointsContext);
 
 export interface ProviderProps {
-  windowSizes: WindowSizes;
+  breakpoints: Breakpoints;
 }
 
 export const Provider: React.FC<ProviderProps> = ({
-  windowSizes,
+  breakpoints,
   children,
 }) => {
   const { width } = useWindowDimensions();
 
   const windowSizeClass = useMemo(() => {
-    const keys = Object.keys(windowSizes).reverse() as WindowSizeClass[];
-    const values = Object.values(windowSizes).reverse();
+    const keys = Object.keys(breakpoints).reverse() as Breakpoint[];
+    const values = Object.values(breakpoints).reverse();
 
     return keys[values.findIndex((size) => width >= size)];
-  }, [width, windowSizes]);
+  }, [width, breakpoints]);
 
   return (
-    <WindowSizeClassContext.Provider value={windowSizeClass}>
-      <WindowSizesContext.Provider value={windowSizes}>
+    <BreakpointsContext.Provider value={breakpoints}>
+      <ActiveBreakpointContext.Provider value={windowSizeClass}>
         {children}
-      </WindowSizesContext.Provider>
-    </WindowSizeClassContext.Provider>
+      </ActiveBreakpointContext.Provider>
+    </BreakpointsContext.Provider>
   );
 };
 
@@ -43,88 +43,47 @@ if (__DEV__) {
   Provider.displayName = 'WindowSizeProvider';
 }
 
-export const useIsWindowSizeClassUp = (sx: WindowSizeClass) => {
-  const windowSizes = useWindowSizes();
-  const keys = useMemo(
-    () => Object.keys(windowSizes) as WindowSizeClass[],
-    [windowSizes]
-  );
-
-  const windowSizeClass = useWindowSizeClass();
-
-  return useMemo(() => {
-    return keys.indexOf(windowSizeClass) >= keys.indexOf(sx);
-  }, [sx, keys, windowSizeClass]);
-};
-
-export const useIsWindowSizeClassDown = (sx: WindowSizeClass) => {
-  const windowSizes = useWindowSizes();
-  const keys = useMemo(
-    () => Object.keys(windowSizes) as WindowSizeClass[],
-    [windowSizes]
-  );
-
-  const windowSizeClass = useWindowSizeClass();
-
-  return useMemo(() => {
-    return keys.indexOf(windowSizeClass) <= keys.indexOf(sx);
-  }, [sx, keys, windowSizeClass]);
-};
-
-export const useIsWindowSizeClassBetween = (
-  sx1: WindowSizeClass,
-  sx2: WindowSizeClass
-) => {
-  const windowSizeClassUp = useIsWindowSizeClassUp(sx1);
-  const windowSizeClassDown = useIsWindowSizeClassDown(sx2);
-
-  return useMemo(() => {
-    return windowSizeClassUp && windowSizeClassDown;
-  }, [windowSizeClassUp, windowSizeClassDown]);
-};
-
-export const useIsWindowSizeClass = (sx: WindowSizeClass) => {
-  const windowSizeClass = useWindowSizeClass();
-
-  return useMemo(() => {
-    return windowSizeClass === sx;
-  }, [windowSizeClass, sx]);
-};
-
-export const useIsWindowSizeClassNot = (sx: WindowSizeClass) => {
-  const windowSizeClass = useWindowSizeClass();
-
-  return useMemo(() => {
-    return windowSizeClass !== sx;
-  }, [windowSizeClass, sx]);
-};
-
 export const useWindowSize = () => {
-  const windowSizes = useWindowSizes();
-  const keys = useMemo(
-    () => Object.keys(windowSizes) as WindowSizeClass[],
-    [windowSizes]
-  );
+  const breakpoints = useBreakpoints();
+  const activeBreakpoint = useActiveBreakpoint();
 
-  const windowSizeClass = useWindowSizeClass();
+  if (!breakpoints || !activeBreakpoint) {
+    throw new Error('useWindowSize must be used within a WindowSizeProvider');
+  }
 
-  return useCallback(
-    <T,>(query: Partial<Record<WindowSizeClass, T>>) => {
-      const queryKeys = Object.keys(query) as WindowSizeClass[];
+  return useMemo(() => {
+    const keys = Object.keys(breakpoints) as Breakpoint[];
 
-      let nearest = windowSizeClass;
+    const up = (breakpoint: Breakpoint) => {
+      return keys.indexOf(activeBreakpoint) >= keys.indexOf(breakpoint);
+    };
+
+    const down = (breakpoint: Breakpoint) => {
+      return keys.indexOf(activeBreakpoint) <= keys.indexOf(breakpoint);
+    };
+
+    const between = (minBreakpoint: Breakpoint, maxBreakpoint: Breakpoint) => {
+      return up(minBreakpoint) && down(maxBreakpoint);
+    };
+
+    const is = (breakpoint: Breakpoint) => {
+      return activeBreakpoint === breakpoint;
+    };
+
+    const not = (breakpoint: Breakpoint) => {
+      return activeBreakpoint !== breakpoint;
+    };
+
+    const value = <T,>(query: Partial<Record<Breakpoint, T>>) => {
+      const queryKeys = Object.keys(query) as Breakpoint[];
+
+      let nearest = activeBreakpoint;
       while (!queryKeys.includes(nearest)) {
         nearest = keys[keys.indexOf(nearest) - 1];
       }
       return query[nearest];
-    },
-    [keys, windowSizeClass]
-  );
-};
+    };
 
-export const useWindowSizeClassValue = <T,>(
-  query: Partial<Record<WindowSizeClass, T>>
-) => {
-  const windowSize = useWindowSize();
-  return useMemo(() => windowSize(query), [windowSize, query]);
+    return { up, down, between, is, not, value };
+  }, [breakpoints, activeBreakpoint]);
 };
